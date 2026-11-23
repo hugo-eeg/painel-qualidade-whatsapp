@@ -238,6 +238,8 @@ function desenhar() {
   var dias = []; for (var i = 59; i >= 0; i--) dias.push(somaDias(hoje, -i));
   var N = dias.length, pos = {}; dias.forEach(function (d, i) { pos[d] = i; });
   function lab(d) { return d.slice(8, 10) + "/" + d.slice(5, 7); }
+  var SEMANA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+  function labSemana(d) { return lab(d) + " · " + SEMANA[new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10))).getUTCDay()]; }
   function vazio(id, txt) { document.getElementById(id).innerHTML = '<div class="empty">' + txt + "</div>"; }
   var TICKS = [0, 10, 20, 30, 40, 50, 59];
 
@@ -281,7 +283,7 @@ function desenhar() {
       var r = sv.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
       var i = Math.max(0, Math.min(N - 1, Math.round((px - iL) / ((iR - iL) / (N - 1)))));
       guia.setAttribute("x1", xOf(i)); guia.setAttribute("x2", xOf(i)); guia.setAttribute("visibility", "visible");
-      tip.innerHTML = '<div class="d">' + lab(dias[i]) + "</div>" + linhas(dias[i]);
+      tip.innerHTML = '<div class="d">' + labSemana(dias[i]) + "</div>" + linhas(dias[i]);
       tip.style.display = "block";
       var wr = wrap.getBoundingClientRect(), left = ev.clientX - wr.left + 14;
       if (left + tip.offsetWidth > wr.width) left = ev.clientX - wr.left - tip.offsetWidth - 14;
