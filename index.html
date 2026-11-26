@@ -9,13 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Painel de operação: estado dos dois números no topo, depois volume, entrega e qualidade, avisos embaixo.
-   Cores fixas por número em todos os gráficos: 9293 azul, 0174 magenta (não se confundem com verde/amarelo/vermelho de estado). */
+/* Painel de operação: estado dos números no topo, depois volume, entrega e qualidade, avisos embaixo.
+   Cores fixas por número em todos os gráficos: 9293 azul, 0174 magenta, 3028 violeta (não se confundem com verde/amarelo/vermelho de estado). */
 :root {
   --bg: #f3f5f8; --surface: #ffffff; --ink: #15202e; --muted: #5a6577; --line: #dce1e8; --grid: #e9edf2;
   --accent: #1f4e8c; --accent-soft: #e2eaf6;
   --good: #1d7a46; --good-soft: #e0f2e7; --mid: #a15c00; --mid-soft: #fcefd9; --bad: #b42318; --bad-soft: #fde7e5;
-  --c9293: #2a78d6; --c0174: #d55181;
+  --c9293: #2a78d6; --c0174: #d55181; --c3028: #7a4cc9;
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -25,14 +25,14 @@
     --bg: #10141b; --surface: #19202a; --ink: #e7ebf1; --muted: #9aa4b4; --line: #2b3341; --grid: #232b37;
     --accent: #7fa8e0; --accent-soft: #1e2c41;
     --good: #6fcf97; --good-soft: #163124; --mid: #f0b860; --mid-soft: #392b14; --bad: #f2867b; --bad-soft: #3a1c1a;
-    --c9293: #3987e5; --c0174: #d55181; color-scheme: dark;
+    --c9293: #3987e5; --c0174: #d55181; --c3028: #a682ea; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #10141b; --surface: #19202a; --ink: #e7ebf1; --muted: #9aa4b4; --line: #2b3341; --grid: #232b37;
   --accent: #7fa8e0; --accent-soft: #1e2c41;
   --good: #6fcf97; --good-soft: #163124; --mid: #f0b860; --mid-soft: #392b14; --bad: #f2867b; --bad-soft: #3a1c1a;
-  --c9293: #3987e5; --c0174: #d55181; color-scheme: dark;
+  --c9293: #3987e5; --c0174: #d55181; --c3028: #a682ea; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -108,7 +108,7 @@ td.r, th.r { text-align: right; }
 <header>
   <div>
     <h1>Qualidade do WhatsApp EEG</h1>
-    <p class="sub">Os dois números lado a lado: estado na Meta, quanto mandam, se as mensagens chegam e os avisos. <span id="upd" class="num"></span></p>
+    <p class="sub">Os números lado a lado: estado na Meta, quanto mandam, se as mensagens chegam e os avisos. <span id="upd" class="num"></span></p>
     <p class="stale" id="stale" hidden></p>
   </div>
   <button class="theme" id="themeBtn" type="button">Modo noturno</button>
@@ -120,7 +120,7 @@ td.r, th.r { text-align: right; }
   <h2 id="g1">Quantas mensagens cada número mandou por dia</h2>
   <p class="lead"><b>O que olhar:</b> volume subindo rápido costuma vir antes do aviso de spam da Meta. Compare o último dia com a média da semana e veja se os avisos (marcas em cima) aparecem depois das subidas.</p>
   <div class="tiles" id="volTiles"></div>
-  <div class="legend"><span class="mk"><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/></svg>Total (soma dos dois)</span><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span>
+  <div class="legend"><span class="mk"><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/></svg>Total (soma dos números)</span><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span><span class="sw" style="--sw: var(--c3028)">3028</span>
     <span class="mk"><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 6L6 12L0 6Z" fill="var(--mid)"/></svg>aviso (importante ou alerta)</span>
     <span class="mk"><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="var(--bad)"/></svg>restrição</span>
     <span class="mk"><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--good)"/></svg>boa notícia</span></div>
@@ -133,10 +133,10 @@ td.r, th.r { text-align: right; }
   <h2 id="g3">As mensagens estão chegando?</h2>
   <p class="lead"><b>O que olhar:</b> a linha tem que ficar dentro da faixa verde, perto de 100%. Se descer da faixa, a Meta está deixando de entregar mensagens do número: avise o Hugo.</p>
   <div class="tiles" id="entTiles"></div>
-  <div class="legend"><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span><span class="box" style="--sw: var(--good-soft)">faixa normal (97% a 100%)</span></div>
+  <div class="legend"><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span><span class="sw" style="--sw: var(--c3028)">3028</span><span class="box" style="--sw: var(--good-soft)">faixa normal (97% a 100%)</span></div>
   <div class="chart" id="entBox"></div>
   <div class="howto"><span><b>Como ler:</b> cada ponto é a parte das mensagens do dia que chegou no celular do cliente (entregues ÷ enviadas). O eixo vai de 94% a 100% para a diferença aparecer; abaixo de 94% o ponto fica no chão do gráfico, com uma bolinha.</span>
-    <span>Nos 60 dias anteriores à restrição os dois números ficaram sempre entre 97% e 100%. Às vezes a Meta conta num dia a entrega de mensagem do dia anterior; nesses dias o painel mostra 100%.</span></div>
+    <span>Nos 60 dias anteriores à restrição o 0174 e o 9293 ficaram sempre entre 97% e 100%. Às vezes a Meta conta num dia a entrega de mensagem do dia anterior; nesses dias o painel mostra 100%.</span></div>
 </section>
 
 <section class="card" aria-labelledby="g2">
@@ -193,8 +193,10 @@ function desenhar() {
   function fmtP(v) { return v.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%"; }
   var NS = "http://www.w3.org/2000/svg";
   function el(t, a, x) { var n = document.createElementNS(NS, t); for (var k in a) n.setAttribute(k, a[k]); if (x != null) n.textContent = x; return n; }
-  var COR = { "0174": "var(--c0174)", "9293": "var(--c9293)" };
-  var NUMS = ["0174", "9293"];
+  var COR = { "0174": "var(--c0174)", "9293": "var(--c9293)", "3028": "var(--c3028)" };
+  var NUMS = ["0174", "9293", "3028"];
+  // Quando cada número entrou no Opa: antes disso a falta de dado é esperada (o 0174 estava na RD; o 3028 é novo).
+  var ENTROU = { "0174": "passou para o Opa. Antes ele estava na conta da RD, que o robô não lê", "3028": "entrou no Opa (número novo, de 26/11)" };
   var NIVEL = { CRITICO: ["bad", "Crítico"], ALERTA: ["mid", "Alerta"], IMPORTANTE: ["info", "Importante"], BOA: ["good", "Boa notícia"], INFO: ["info", "Info"] };
 
   // ---------- topo: quando o robô leu a Meta pela última vez ----------
@@ -214,7 +216,7 @@ function desenhar() {
   // ---------- cartões dos números ----------
   var box = document.getElementById("numeros");
   NUMS.forEach(function (n) {
-    var x = D.numeros[n], cls = "good", chip = ["good", "Normal"], big = "Enviando";
+    var x = D.numeros[n] || { nome: n }, cls = "good", chip = ["good", "Normal"], big = "Enviando";
     if (x.restritoAte || x.podeCod === "BLOCKED" || ["RESTRICTED", "BANNED", "DISCONNECTED", "DELETED"].indexOf(x.s) >= 0) { cls = "bad"; chip = ["bad", "Restrito"]; big = "Não envia mensagens"; }
     else if (x.q === "RED" || x.q === "YELLOW" || x.podeCod === "LIMITED" || x.s === "FLAGGED" || /spam|violação|análise/.test(x.ultimoAviso)) { cls = "mid"; chip = ["mid", "Com aviso"]; big = "Enviando, com risco"; }
     if (!x.lidoEm && !x.ultimoAviso) { cls = ""; chip = ["info", "Sem dado"]; big = "Aguardando leitura"; }
@@ -259,6 +261,8 @@ function desenhar() {
   var ultimoDia = completos[completos.length - 1];
   var avisosDia = {}; D.avisos.forEach(function (a) { (avisosDia[a.dia] = avisosDia[a.dia] || []).push(a); });
   var restrDia = (D.numeros["9293"] || {}).restritoDesdeDia || "";
+  // Faixas dos avisos acima do gráfico de volume (aviso do portfólio fica na primeira)
+  var FAIXA = {}; NUMS.forEach(function (n, i) { FAIXA[n] = 14 + i * 18; });
 
   // Série de um número: pedaços contínuos (dia sem dado quebra a linha)
   function pedacos(n, valor) {
@@ -325,14 +329,14 @@ function desenhar() {
         alerta = dif >= 50;
         cmp = (dif === 0 ? "Igual à" : dif > 0 ? dif + "% acima da" : (-dif) + "% abaixo da") + " média dos 7 dias antes (" + fmtN(Math.round(media)) + ")";
       }
-      return '<div class="tile" style="--sw:' + COR[n] + '"><span class="lbl"><b>' + (n === "TOTAL" ? "Total (0174 + 9293)" : n) + "</b> · " + (ultimoDia ? lab(ultimoDia) + ", último dia completo" : "") + "</span>" +
+      return '<div class="tile" style="--sw:' + COR[n] + '"><span class="lbl"><b>' + (n === "TOTAL" ? "Total (" + NUMS.join(" + ") + ")" : n) + "</b> · " + (ultimoDia ? lab(ultimoDia) + ", último dia completo" : "") + "</span>" +
         '<span class="val">' + (v ? fmtN(v.env) : "sem dado") + (v ? "<small>mensagens</small>" : "") + "</span>" +
         '<span class="cmp' + (alerta ? " alerta" : "") + '">' + esc(cmp) + "</span></div>";
     });
     document.getElementById("volTiles").innerHTML = tiles.join("");
 
-    var W = 1000, H = 360, L = 52, R = 70, T = 64, B = 34;
-    var sv = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, role: "img", "aria-label": "Mensagens enviadas por dia nos dois números, com os avisos da Meta" });
+    var W = 1000, H = 360, L = 52, R = 70, T = 14 + NUMS.length * 18, B = 34;
+    var sv = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, role: "img", "aria-label": "Mensagens enviadas por dia em cada número, com os avisos da Meta" });
     sv.style.maxWidth = "100%"; sv.style.height = "auto";
     var max = 10; ["TOTAL"].concat(NUMS).forEach(function (n) { Object.keys(vol[n]).forEach(function (d) { if (vol[n][d].env > max) max = vol[n][d].env; }); });
     var passo = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000].filter(function (s) { return s * 4 >= max; })[0] || 5000;
@@ -353,7 +357,7 @@ function desenhar() {
     }
     TICKS.forEach(function (i) { sv.appendChild(el("text", { x: x(i), y: H - 12, "text-anchor": "middle" }, lab(dias[i]))); });
     var fins = [];
-    ["TOTAL", "9293", "0174"].forEach(function (n) {
+    ["TOTAL"].concat(NUMS.slice().reverse()).forEach(function (n) {
       var tot = n === "TOTAL";
       pedacos(n, function (v) { return v.env; }).forEach(function (pts) {
         var dd = pts.map(function (p, k) { return (k ? "L" : "M") + x(p[0]) + " " + y(p[1]); }).join("");
@@ -369,13 +373,13 @@ function desenhar() {
     });
     rotulosFim(sv, fins, x(pos[ultimoDia]) + 10, 16);
     // faixas de avisos, uma por número, acima do gráfico
-    [["0174", 18], ["9293", 42]].forEach(function (f) {
-      sv.appendChild(el("text", { x: L - 8, y: f[1] + 4, "text-anchor": "end", "class": "strong" }, f[0]));
-      sv.appendChild(el("line", { x1: L, x2: W - R, y1: f[1], y2: f[1], stroke: "var(--grid)" }));
+    NUMS.forEach(function (n) {
+      sv.appendChild(el("text", { x: L - 8, y: FAIXA[n] + 4, "text-anchor": "end", "class": "strong" }, n));
+      sv.appendChild(el("line", { x1: L, x2: W - R, y1: FAIXA[n], y2: FAIXA[n], stroke: "var(--grid)" }));
     });
     D.avisos.forEach(function (a) {
       var i = pos[a.dia]; if (i == null) return;
-      var cy = a.n === "9293" ? 42 : 18, cx = x(i);
+      var cy = FAIXA[a.n] || FAIXA[NUMS[0]], cx = x(i);
       if (a.nivel === "CRITICO") sv.appendChild(el("rect", { x: cx - 6, y: cy - 6, width: 12, height: 12, rx: 2, fill: "var(--bad)" }));
       else if (a.nivel === "BOA") sv.appendChild(el("circle", { cx: cx, cy: cy, r: 6, fill: "var(--good)" }));
       else if (a.nivel === "IMPORTANTE" || a.nivel === "ALERTA") sv.appendChild(el("path", { d: "M" + cx + " " + (cy - 7) + "L" + (cx + 7) + " " + cy + "L" + cx + " " + (cy + 7) + "L" + (cx - 7) + " " + cy + "Z", fill: "var(--mid)", stroke: "var(--surface)", "stroke-width": 1.5 }));
@@ -390,17 +394,21 @@ function desenhar() {
       if (t) h = '<div class="row" style="--sw:' + COR.TOTAL + '"><i></i><b>Total: ' + fmtN(t.env) + " enviadas</b></div>" + h;
       return h + linhaAvisos(d);
     });
-    var ini0174 = primeiroDia("0174");
-    how.innerHTML = "<span><b>Como ler:</b> cada linha colorida é um número; quanto mais alta, mais mensagens ele mandou no dia (bot, atendentes e modelos). A linha tracejada é o total dos dois somados, para ver o volume do escritório. O eixo começa no zero. Passe o mouse para ver o dia.</span>" +
+    var entrou = NUMS.map(function (n) {
+      var ini = primeiroDia(n);
+      return ENTROU[n] && ini && ini > dias[0] ? "<span>O " + n + " só aparece a partir de " + lab(ini) + ", quando " + ENTROU[n] + ".</span>" : "";
+    }).join("");
+    how.innerHTML = "<span><b>Como ler:</b> cada linha colorida é um número; quanto mais alta, mais mensagens ele mandou no dia (bot, atendentes e modelos). A linha tracejada é o total dos números somados, para ver o volume do escritório. O eixo começa no zero. Passe o mouse para ver o dia.</span>" +
       "<span>As marcas em cima são os avisos da Meta, na linha do número que recebeu. Hoje (" + lab(parcialDesde) + ") ainda não terminou e fica de fora; o dia da Meta vira às 21h de Brasília.</span>" +
-      (ini0174 && ini0174 > dias[0] ? "<span>O 0174 só aparece a partir de " + lab(ini0174) + ", quando passou para o Opa. Antes ele estava na conta da RD, que o robô não lê.</span>" : "");
+      entrou;
 
     // tabela dos últimos 14 dias
     var ult14 = completos.slice(-14).reverse();
-    document.getElementById("volTab").innerHTML = "<table><thead><tr><th>Dia</th><th class=\"r\">Total enviadas</th><th class=\"r\">0174 enviadas</th><th class=\"r\">0174 entregues</th><th class=\"r\">9293 enviadas</th><th class=\"r\">9293 entregues</th></tr></thead><tbody>" +
+    document.getElementById("volTab").innerHTML = "<table><thead><tr><th>Dia</th><th class=\"r\">Total enviadas</th>" +
+      NUMS.map(function (n) { return "<th class=\"r\">" + n + " enviadas</th><th class=\"r\">" + n + " entregues</th>"; }).join("") + "</tr></thead><tbody>" +
       ult14.map(function (d) {
         function c(n, k) { var v = vol[n][d]; return '<td class="r num">' + (v && v[k] != null ? fmtN(v[k]) : "–") + "</td>"; }
-        return "<tr><td class=\"num\">" + lab(d) + "</td>" + c("TOTAL", "env").replace('class="r num">', 'class="r num"><b>').replace("</td>", "</b></td>") + c("0174", "env") + c("0174", "ent") + c("9293", "env") + c("9293", "ent") + "</tr>";
+        return "<tr><td class=\"num\">" + lab(d) + "</td>" + c("TOTAL", "env").replace('class="r num">', 'class="r num"><b>').replace("</td>", "</b></td>") + NUMS.map(function (n) { return c(n, "env") + c(n, "ent"); }).join("") + "</tr>";
       }).join("") + "</tbody></table>";
   }
 
@@ -432,7 +440,7 @@ function desenhar() {
     e.appendChild(el("text", { x: EW - ER + 6, y: ey(98.5) + 4, "class": "src" }, "normal"));
     TICKS.forEach(function (i) { e.appendChild(el("text", { x: ex(i), y: EH - 8, "text-anchor": "middle" }, lab(dias[i]))); });
     var finsE = [];
-    ["9293", "0174"].forEach(function (n) {
+    NUMS.slice().reverse().forEach(function (n) {
       pedacos(n, taxa).forEach(function (pts) {
         e.appendChild(el("path", { d: pts.map(function (p, k) { return (k ? "L" : "M") + ex(p[0]) + " " + ey(p[1]); }).join(""), fill: "none", stroke: COR[n], "stroke-width": 2.5, "stroke-linejoin": "round" }));
         pts.forEach(function (p) { if (p[1] < 97) e.appendChild(el("circle", { cx: ex(p[0]), cy: ey(p[1]), r: 5, fill: COR[n], stroke: "var(--surface)", "stroke-width": 2 })); });
@@ -454,12 +462,12 @@ function desenhar() {
   if (!D.qualidade.length) {
     vazio("qualBox", D.temMeta ? "Aguardando a primeira leitura da Meta." : "Precisa do token da Meta.");
   } else {
-    var QW = 1000, QH = 120, QL = 52, QR = 70;
+    var QW = 1000, QL = 52, QR = 70, QH = 32 + NUMS.length * 44;
     var q = el("svg", { viewBox: "0 0 " + QW + " " + QH, width: QW, role: "img", "aria-label": "Qualidade por dia de cada número" });
     q.style.maxWidth = "100%"; q.style.height = "auto";
     var cw = (QW - QL - QR) / N, CQ = { "Alta": "var(--good)", "Média": "var(--mid)", "Baixa": "var(--bad)" }, temManual = false;
     var qd = {}; D.qualidade.forEach(function (z) { qd[z.n + "|" + z.dia] = z; });
-    [["0174", 26], ["9293", 70]].forEach(function (r) {
+    NUMS.map(function (n, i) { return [n, 26 + i * 44]; }).forEach(function (r) {
       q.appendChild(el("text", { x: QL - 8, y: r[1] + 5, "text-anchor": "end", "class": "strong" }, r[0]));
       q.appendChild(el("rect", { x: QL, y: r[1] - 14, width: QW - QL - QR, height: 28, rx: 4, fill: "var(--bg)", stroke: "var(--line)", "stroke-dasharray": "3 3" }));
       D.qualidade.filter(function (z) { return z.n === r[0] && pos[z.dia] != null; }).forEach(function (z) {
@@ -470,7 +478,7 @@ function desenhar() {
     TICKS.forEach(function (i) { q.appendChild(el("text", { x: QL + i * cw + cw / 2, y: QH - 8, "text-anchor": "middle" }, lab(dias[i]))); });
     if (temManual) { document.getElementById("manLeg").hidden = false; document.getElementById("qualNote").textContent = "Pior nota de cada dia. Os dias com bolinha foram anotados à mão pela equipe no Pumble; desde 06/11, 18h, o robô lê a Meta a cada 10 minutos."; }
     var w2 = moldura("qualBox", q);
-    hover(w2, q, QW, function (i) { return QL + i * cw + cw / 2; }, QL + cw / 2, QW - QR - cw / 2, 8, 88, function (d) {
+    hover(w2, q, QW, function (i) { return QL + i * cw + cw / 2; }, QL + cw / 2, QW - QR - cw / 2, 8, QH - 32, function (d) {
       return NUMS.map(function (n) {
         var z = qd[n + "|" + d];
         return '<div class="row" style="--sw:' + COR[n] + '"><i></i>' + n + ": " + (z ? esc(z.q) + (z.melhor && z.melhor !== z.q ? " (oscilou até " + esc(z.melhor) + ")" : "") + (z.manual ? " (anotado à mão)" : "") : "sem leitura") + "</div>";
