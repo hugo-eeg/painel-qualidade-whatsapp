@@ -223,7 +223,8 @@ function desenhar() {
     var qchip = x.qualidade ? '<span class="chip ' + ({ GREEN: "good", YELLOW: "mid", RED: "bad" }[x.q] || "info") + '">' + esc(x.qualidade) + "</span>" : '<span class="src">sem leitura da Meta</span>';
     var html = '<div class="card nb ' + cls + '"><div class="nb-head"><h2>' + esc(x.nome) + '</h2><span class="chip ' + chip[0] + '">' + chip[1] + "</span></div>" +
       '<div class="big num">' + big + "</div><div class=\"kv\">" +
-      '<div><span class="k">Qualidade</span><span class="v">' + qchip + "</span></div>" +
+      '<div><span class="k">Qualidade</span><span class="v">' + qchip + "</span>" +
+        (x.qDesde ? '<span class="src">' + esc(x.qDesde) + (x.trocas30 ? " · " + x.trocas30 + (x.trocas30 === 1 ? " troca" : " trocas") + " em 30 dias" : "") + "</span>" : "") + "</div>" +
       '<div><span class="k">Status na Meta</span><span class="v">' + esc(x.status || "sem leitura") + "</span></div>" +
       '<div><span class="k">Pode enviar</span><span class="v">' + esc(x.pode || "sem leitura") + "</span></div>" +
       '<div><span class="k">Limite</span><span class="v num">' + esc(x.limite || "sem leitura") + "</span></div>" +
