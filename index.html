@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Painel de operação: estado dos números no topo, depois volume, entrega e qualidade, avisos embaixo.
+/* Painel de operação (v10): cartões dos números no topo, depois qualidade por dia, volume, entrega, modelos e os últimos avisos.
    Cores fixas por número em todos os gráficos: 9293 azul, 0174 magenta, 3028 violeta (não se confundem com verde/amarelo/vermelho de estado). */
 :root {
   --bg: #f3f5f8; --surface: #ffffff; --ink: #15202e; --muted: #5a6577; --line: #dce1e8; --grid: #e9edf2;
@@ -99,6 +99,18 @@ th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spa
 td.r, th.r { text-align: right; }
 .tab { overflow-x: auto; }
 .big-ok { font-size: 20px; font-weight: 600; margin: 4px 0 12px; }
+/* v10: cartão enxuto (nota grande, desde quando, só o que pede atenção) e "Como ler" recolhido */
+.qbig { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; }
+.qbig.good { color: var(--good); } .qbig.mid { color: var(--mid); } .qbig.bad { color: var(--bad); } .qbig.info { color: var(--muted); font-size: 22px; }
+.qdesde { color: var(--muted); font-size: 14px; }
+.att { display: grid; gap: 4px; background: var(--mid-soft); color: var(--mid); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-weight: 600; }
+.att.bad { background: var(--bad-soft); color: var(--bad); }
+.ult { font-size: 14px; } .ult .k { color: var(--muted); }
+details.como summary { color: var(--muted); font-weight: 500; }
+details.como[open] summary { margin-bottom: 8px; }
+details.como .howto { border-top: 0; padding-top: 0; }
+.card.compacto { gap: 8px; }
+.card.compacto .big-ok { margin: 0; font-size: 17px; }
 @media (max-width: 420px) { .kv { grid-template-columns: 1fr; } h1 { font-size: 24px; } .tile .val { font-size: 34px; } }
 </style>
 </head>
@@ -108,7 +120,7 @@ td.r, th.r { text-align: right; }
 <header>
   <div>
     <h1>Qualidade do WhatsApp EEG</h1>
-    <p class="sub">Os números lado a lado: estado na Meta, quanto mandam, se as mensagens chegam e os avisos. <span id="upd" class="num"></span></p>
+    <p class="sub"><span id="upd" class="num"></span> <span id="lim" class="num"></span></p>
     <p class="stale" id="stale" hidden></p>
   </div>
   <button class="theme" id="themeBtn" type="button">Modo noturno</button>
@@ -116,46 +128,45 @@ td.r, th.r { text-align: right; }
 
 <section class="numbers" id="numeros" aria-label="Estado atual dos números"></section>
 
+<section class="card" aria-labelledby="g2">
+  <h2 id="g2">Qualidade na Meta, por dia</h2>
+  <p class="lead">Pior nota de cada dia. Passe o mouse para ver se o dia oscilou.</p>
+  <div class="legend"><span class="box" style="--sw: var(--good)">Alta</span><span class="box" style="--sw: var(--mid)">Média</span><span class="box" style="--sw: var(--bad)">Baixa</span><span class="box" style="--sw: var(--line)">sem leitura</span><span class="mk" id="manLeg" hidden><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="3" fill="var(--ink)"/></svg>anotado à mão pela equipe</span></div>
+  <div class="chart" id="qualBox"></div>
+  <details class="como"><summary>Como ler</summary><div class="howto"><span>A cor de cada dia é a pior nota do dia, como no gráfico de 30 dias da Meta: verde é Alta, amarelo é Média, vermelho é Baixa.</span><span id="qualNote">Desde 06/11, 18h, o robô lê a Meta a cada 10 minutos.</span></div></details>
+</section>
+
 <section class="card" aria-labelledby="g1">
-  <h2 id="g1">Quantas mensagens cada número mandou por dia</h2>
-  <p class="lead"><b>O que olhar:</b> volume subindo rápido costuma vir antes do aviso de spam da Meta. Compare o último dia com a média da semana e veja se os avisos (marcas em cima) aparecem depois das subidas.</p>
+  <h2 id="g1">Mensagens enviadas por dia</h2>
+  <p class="lead">Subida rápida costuma vir antes do aviso de spam da Meta.</p>
   <div class="tiles" id="volTiles"></div>
-  <div class="legend"><span class="mk"><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/></svg>Total (soma dos números)</span><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span><span class="sw" style="--sw: var(--c3028)">3028</span>
-    <span class="mk"><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 6L6 12L0 6Z" fill="var(--mid)"/></svg>aviso (importante ou alerta)</span>
+  <div class="legend" data-nums><span class="mk"><svg width="20" height="4" aria-hidden="true"><line x1="0" x2="20" y1="2" y2="2" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/></svg>Total</span>
+    <span class="mk"><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 6L6 12L0 6Z" fill="var(--mid)"/></svg>aviso</span>
     <span class="mk"><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="var(--bad)"/></svg>restrição</span>
     <span class="mk"><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--good)"/></svg>boa notícia</span></div>
   <div class="chart" id="volBox"></div>
-  <div class="howto" id="volHow"></div>
+  <details class="como"><summary>Como ler</summary><div class="howto" id="volHow"></div></details>
   <details><summary>Ver os números dos últimos 14 dias</summary><div class="tab" id="volTab"></div></details>
 </section>
 
 <section class="card" aria-labelledby="g3">
   <h2 id="g3">As mensagens estão chegando?</h2>
-  <p class="lead"><b>O que olhar:</b> a linha tem que ficar dentro da faixa verde, perto de 100%. Se descer da faixa, a Meta está deixando de entregar mensagens do número: avise o Hugo.</p>
+  <p class="lead">Tem que ficar na faixa verde, perto de 100%. Se descer, avise o Hugo.</p>
   <div class="tiles" id="entTiles"></div>
-  <div class="legend"><span class="sw" style="--sw: var(--c0174)">0174</span><span class="sw" style="--sw: var(--c9293)">9293</span><span class="sw" style="--sw: var(--c3028)">3028</span><span class="box" style="--sw: var(--good-soft)">faixa normal (97% a 100%)</span></div>
+  <div class="legend" data-nums><span class="box" style="--sw: var(--good-soft)">faixa normal (97% a 100%)</span></div>
   <div class="chart" id="entBox"></div>
-  <div class="howto"><span><b>Como ler:</b> cada ponto é a parte das mensagens do dia que chegou no celular do cliente (entregues ÷ enviadas). O eixo vai de 94% a 100% para a diferença aparecer; abaixo de 94% o ponto fica no chão do gráfico, com uma bolinha.</span>
-    <span>Nos 60 dias anteriores à restrição o 0174 e o 9293 ficaram sempre entre 97% e 100%. Às vezes a Meta conta num dia a entrega de mensagem do dia anterior; nesses dias o painel mostra 100%.</span></div>
+  <details class="como"><summary>Como ler</summary><div class="howto"><span>Cada ponto é a parte das mensagens do dia que chegou no celular do cliente (entregues ÷ enviadas). O eixo vai de 94% a 100% para a diferença aparecer; abaixo de 94% o ponto fica no chão do gráfico, com uma bolinha.</span>
+    <span>Nos 60 dias anteriores à restrição o 0174 e o 9293 ficaram sempre entre 97% e 100%. Às vezes a Meta conta num dia a entrega de mensagem do dia anterior; nesses dias o painel mostra 100%.</span></div></details>
 </section>
 
-<section class="card" aria-labelledby="g2">
-  <h2 id="g2">Qualidade na Meta, por dia</h2>
-  <p class="lead"><b>O que olhar:</b> a cor de cada dia é a pior nota do dia, como no gráfico de 30 dias da Meta. Verde é Alta, amarelo é Média, vermelho é Baixa. Passe o mouse para ver se o dia oscilou.</p>
-  <div class="legend"><span class="box" style="--sw: var(--good)">Alta</span><span class="box" style="--sw: var(--mid)">Média</span><span class="box" style="--sw: var(--bad)">Baixa</span><span class="box" style="--sw: var(--line)">sem leitura</span><span class="mk" id="manLeg" hidden><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="3" fill="var(--ink)"/></svg>anotado à mão pela equipe</span></div>
-  <div class="chart" id="qualBox"></div>
-  <p class="note" id="qualNote">Pior nota de cada dia. Desde 06/11, 18h, o robô lê a Meta a cada 10 minutos.</p>
-</section>
-
-<section class="card" aria-labelledby="mod">
+<section class="card compacto" aria-labelledby="mod">
   <h2 id="mod">Modelos de mensagem</h2>
-  <p class="lead"><b>O que olhar:</b> modelo em vermelho recebeu retorno negativo dos clientes (bloqueio ou denúncia) e a Meta pode pausar: 3h na 1ª vez, 6h na 2ª, e na 3ª desativa. A Meta não mostra o número de bloqueios; esta nota é o que ela entrega.</p>
   <div id="modBox"></div>
-  <p class="note" id="modNote"></p>
+  <details class="como"><summary>Como ler</summary><div class="howto"><span>Modelo em vermelho recebeu retorno negativo dos clientes (bloqueio ou denúncia) e a Meta pode pausar: 3h na 1ª vez, 6h na 2ª, e na 3ª desativa. A Meta não mostra o número de bloqueios; esta nota é o que ela entrega.</span><span id="modNote"></span></div></details>
 </section>
 
 <section class="card" aria-labelledby="av">
-  <h2 id="av">Avisos dos últimos 60 dias</h2>
+  <h2 id="av">Últimos avisos</h2>
   <div id="avBox"></div>
 </section>
 
@@ -202,7 +213,7 @@ function desenhar() {
   // ---------- topo: quando o robô leu a Meta pela última vez ----------
   var upd = document.getElementById("upd");
   if (D.ultimaLeitura) {
-    upd.textContent = "Última leitura da Meta: " + D.ultimaLeituraTxt + ".";
+    upd.textContent = "Lido na Meta em " + D.ultimaLeituraTxt + ".";
     var minutos = Math.round((D.agora - D.ultimaLeitura) / 60000);
     if (minutos > 40) {
       var st = document.getElementById("stale");
@@ -213,26 +224,42 @@ function desenhar() {
     upd.textContent = "Página gerada em " + D.atualizado + ".";
   }
 
-  // ---------- cartões dos números ----------
+  // ---------- cartões dos números (v10: enxutos) ----------
+  // Limite: a Meta dá o mesmo limite ao portfólio todo; se for igual para todos, vai uma vez só no topo.
+  var limites = NUMS.map(function (n) { return (D.numeros[n] || {}).limite || ""; }).filter(String);
+  var limiteUnico = limites.length === NUMS.length && limites.every(function (l) { return l === limites[0]; });
+  if (limiteUnico) document.getElementById("lim").textContent = "Limite do portfólio: " + limites[0] + ", vale para todos.";
+  // Aviso recente de risco: o aviso mais novo do número não é boa notícia e tem até 4 dias (o ciclo de spam da Meta).
+  // Antes o cartão procurava "spam" no texto, e "ciclo de spam parou" (boa notícia) deixava o número "Com aviso".
+  function avisoRisco(n) {
+    var a = D.avisos.filter(function (z) { return z.n === n; }).sort(function (p, q) { return q.t - p.t; })[0];
+    return !!(a && a.nivel !== "BOA" && D.agora - a.t <= 4 * 864e5);
+  }
   var box = document.getElementById("numeros");
   NUMS.forEach(function (n) {
-    var x = D.numeros[n] || { nome: n }, cls = "good", chip = ["good", "Normal"], big = "Enviando";
-    if (x.restritoAte || x.podeCod === "BLOCKED" || ["RESTRICTED", "BANNED", "DISCONNECTED", "DELETED"].indexOf(x.s) >= 0) { cls = "bad"; chip = ["bad", "Restrito"]; big = "Não envia mensagens"; }
-    else if (x.q === "RED" || x.q === "YELLOW" || x.podeCod === "LIMITED" || x.s === "FLAGGED" || /spam|violação|análise/.test(x.ultimoAviso)) { cls = "mid"; chip = ["mid", "Com aviso"]; big = "Enviando, com risco"; }
-    if (!x.lidoEm && !x.ultimoAviso) { cls = ""; chip = ["info", "Sem dado"]; big = "Aguardando leitura"; }
-    var qchip = x.qualidade ? '<span class="chip ' + ({ GREEN: "good", YELLOW: "mid", RED: "bad" }[x.q] || "info") + '">' + esc(x.qualidade) + "</span>" : '<span class="src">sem leitura da Meta</span>';
+    var x = D.numeros[n] || { nome: n }, cls = "good", chip = ["good", "Normal"];
+    if (x.restritoAte || x.podeCod === "BLOCKED" || ["RESTRICTED", "BANNED", "DISCONNECTED", "DELETED"].indexOf(x.s) >= 0) { cls = "bad"; chip = ["bad", "Restrito"]; }
+    else if (x.q === "RED" || x.q === "YELLOW" || x.podeCod === "LIMITED" || x.s === "FLAGGED" || avisoRisco(n)) { cls = "mid"; chip = ["mid", "Com risco"]; }
+    if (!x.lidoEm && !x.ultimoAviso) { cls = ""; chip = ["info", "Sem dado"]; }
+    var qc = { GREEN: "good", YELLOW: "mid", RED: "bad" }[x.q] || "info";
+    // Só o que pede atenção vira linha extra
+    var att = [];
+    if (x.restritoAte) att.push("Restrito de " + x.restritoDesde + " até ~" + x.restritoAte);
+    if (x.s && x.s !== "CONNECTED") att.push("Status na Meta: " + x.status);
+    if (x.podeCod && x.podeCod !== "AVAILABLE") att.push("Envio " + (x.pode || "").toLowerCase() + (x.motivo ? ": " + x.motivo : ""));
+    else if (x.motivo) att.push("Motivo da Meta: " + x.motivo);
+    if (!limiteUnico && x.limite) att.push("Limite: " + x.limite);
+    if (!x.lidoEm) att.push("Ainda sem leitura direta da Meta; dados dos e-mails.");
     var html = '<div class="card nb ' + cls + '"><div class="nb-head"><h2>' + esc(x.nome) + '</h2><span class="chip ' + chip[0] + '">' + chip[1] + "</span></div>" +
-      '<div class="big num">' + big + "</div><div class=\"kv\">" +
-      '<div><span class="k">Qualidade</span><span class="v">' + qchip + "</span>" +
-        (x.qDesde ? '<span class="src">' + esc(x.qDesde) + (x.trocas30 ? " · " + x.trocas30 + (x.trocas30 === 1 ? " troca" : " trocas") + " em 30 dias" : "") + "</span>" : "") + "</div>" +
-      '<div><span class="k">Status na Meta</span><span class="v">' + esc(x.status || "sem leitura") + "</span></div>" +
-      '<div><span class="k">Pode enviar</span><span class="v">' + esc(x.pode || "sem leitura") + "</span></div>" +
-      '<div><span class="k">Limite</span><span class="v num">' + esc(x.limite || "sem leitura") + "</span></div>" +
-      (x.restritoAte ? '<div><span class="k">Restrição</span><span class="v num">' + esc(x.restritoDesde) + " até ~" + esc(x.restritoAte) + "</span></div>" : "") +
-      '<div><span class="k">Último aviso da Meta</span><span class="v num">' + esc(x.ultimoAviso || "nenhum em 30 dias") + "</span></div>" +
-      "</div>" + (x.motivo ? '<p class="src">Motivo da Meta: ' + esc(x.motivo) + "</p>" : "") +
-      '<p class="src">' + (x.lidoEm ? "Lido na Meta em " + esc(x.lidoEm) + "." : "Ainda sem leitura direta da Meta; dados dos e-mails.") + "</p></div>";
+      '<div><div class="qbig ' + qc + '">' + esc(x.qualidade || "Sem leitura") + "</div>" +
+      (x.qDesde ? '<div class="qdesde num">' + esc(x.qDesde) + (x.trocas30 ? " · " + x.trocas30 + (x.trocas30 === 1 ? " troca" : " trocas") + " em 30 dias" : "") + "</div>" : "") + "</div>" +
+      (att.length ? '<div class="att ' + (cls === "bad" ? "bad" : "") + '">' + att.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</div>" : "") +
+      '<p class="ult num"><span class="k">Último aviso: </span>' + esc(x.ultimoAviso || "nenhum em 30 dias") + "</p></div>";
     box.insertAdjacentHTML("beforeend", html);
+  });
+  // Legendas dos gráficos: uma cor por número, gerada de NUMS (número novo entra sozinho)
+  Array.prototype.forEach.call(document.querySelectorAll("[data-nums]"), function (lg) {
+    lg.insertAdjacentHTML("afterbegin", NUMS.map(function (n) { return '<span class="sw" style="--sw: ' + COR[n] + '">' + n + "</span>"; }).join(""));
   });
 
   // ---------- eixo de dias (60 dias até hoje, dia de Brasília) ----------
@@ -399,7 +426,7 @@ function desenhar() {
       var ini = primeiroDia(n);
       return ENTROU[n] && ini && ini > dias[0] ? "<span>O " + n + " só aparece a partir de " + lab(ini) + ", quando " + ENTROU[n] + ".</span>" : "";
     }).join("");
-    how.innerHTML = "<span><b>Como ler:</b> cada linha colorida é um número; quanto mais alta, mais mensagens ele mandou no dia (bot, atendentes e modelos). A linha tracejada é o total dos números somados, para ver o volume do escritório. O eixo começa no zero. Passe o mouse para ver o dia.</span>" +
+    how.innerHTML = "<span>Compare o último dia com a média da semana e veja se os avisos (marcas em cima) aparecem depois das subidas.</span><span>Cada linha colorida é um número; quanto mais alta, mais mensagens ele mandou no dia (bot, atendentes e modelos). A linha tracejada é o total dos números somados, para ver o volume do escritório. O eixo começa no zero. Passe o mouse para ver o dia.</span>" +
       "<span>As marcas em cima são os avisos da Meta, na linha do número que recebeu. Hoje (" + lab(parcialDesde) + ") ainda não terminou e fica de fora; o dia da Meta vira às 21h de Brasília.</span>" +
       entrou;
 
@@ -477,7 +504,7 @@ function desenhar() {
       });
     });
     TICKS.forEach(function (i) { q.appendChild(el("text", { x: QL + i * cw + cw / 2, y: QH - 8, "text-anchor": "middle" }, lab(dias[i]))); });
-    if (temManual) { document.getElementById("manLeg").hidden = false; document.getElementById("qualNote").textContent = "Pior nota de cada dia. Os dias com bolinha foram anotados à mão pela equipe no Pumble; desde 06/11, 18h, o robô lê a Meta a cada 10 minutos."; }
+    if (temManual) { document.getElementById("manLeg").hidden = false; document.getElementById("qualNote").textContent = "Os dias com bolinha foram anotados à mão pela equipe no Pumble; desde 06/11, 18h, o robô lê a Meta a cada 10 minutos."; }
     var w2 = moldura("qualBox", q);
     hover(w2, q, QW, function (i) { return QL + i * cw + cw / 2; }, QL + cw / 2, QW - QR - cw / 2, 8, QH - 32, function (d) {
       return NUMS.map(function (n) {
@@ -503,14 +530,19 @@ function desenhar() {
     document.getElementById("modNote").textContent = "Só os modelos em uso (ativos, pausados ou desativados). Lido na Meta em " + D.modelosLidoEm + "; a Meta atualiza a nota dos modelos aos poucos.";
   }
 
-  // ---------- tabela de avisos ----------
+  // ---------- avisos: os 8 mais novos à vista, o resto dos 60 dias recolhido ----------
   if (!D.avisos.length) { vazio("avBox", "Nenhum aviso nos últimos 60 dias."); }
   else {
-    var rows = D.avisos.slice(0, 80).map(function (a) {
-      var nv = NIVEL[a.nivel] || ["info", a.nivel];
-      return "<tr><td class=\"num\">" + esc(a.quando) + "</td><td>" + esc(a.n) + "</td><td><span class=\"chip " + nv[0] + "\">" + nv[1] + "</span></td><td>" + esc(a.r) + "</td><td class=\"src\">" + esc(a.origem) + "</td></tr>";
-    }).join("");
-    document.getElementById("avBox").innerHTML = '<div class="tab"><table><thead><tr><th>Quando</th><th>Número</th><th>Nível</th><th>O que houve</th><th>Origem</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+    function tabAv(lista) {
+      return '<div class="tab"><table><thead><tr><th>Quando</th><th>Número</th><th>Nível</th><th>O que houve</th><th>Origem</th></tr></thead><tbody>' +
+        lista.map(function (a) {
+          var nv = NIVEL[a.nivel] || ["info", a.nivel];
+          return "<tr><td class=\"num\">" + esc(a.quando) + "</td><td>" + esc(a.n) + "</td><td><span class=\"chip " + nv[0] + "\">" + nv[1] + "</span></td><td>" + esc(a.r) + "</td><td class=\"src\">" + esc(a.origem) + "</td></tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    var VISTOS = 8, todos = D.avisos.slice(0, 80);
+    document.getElementById("avBox").innerHTML = tabAv(todos.slice(0, VISTOS)) +
+      (todos.length > VISTOS ? "<details><summary>Ver todos os avisos dos últimos 60 dias (" + todos.length + ")</summary>" + tabAv(todos.slice(VISTOS)) + "</details>" : "");
   }
 }
 carregar();
